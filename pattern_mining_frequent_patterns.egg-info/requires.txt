@@ -1,0 +1,7 @@
+numpy
+urllib3
+sphinx
+sphinx-rtd-theme
+pandas
+validators
+psutil

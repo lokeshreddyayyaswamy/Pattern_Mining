@@ -1,0 +1,29 @@
+Metadata-Version: 2.4
+Name: pattern_mining_frequent_patterns
+Version: 1.0.0
+Summary: Apriori Frequent Pattern Mining Algorithm
+Home-page: https://github.com/lokeshreddyayyaswamy/Pattern_Mining
+Author: Lokesh A
+Author-email: lokeshreddy2680@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: urllib3
+Requires-Dist: sphinx
+Requires-Dist: sphinx-rtd-theme
+Requires-Dist: pandas
+Requires-Dist: validators
+Requires-Dist: psutil
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Pattern_Mining

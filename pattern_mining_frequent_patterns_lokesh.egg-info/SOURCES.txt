@@ -1,0 +1,10 @@
+README.md
+setup.py
+Frequent_Pattern/Apriori.py
+Frequent_Pattern/__init__.py
+Frequent_Pattern/abstract.py
+pattern_mining_frequent_patterns_lokesh.egg-info/PKG-INFO
+pattern_mining_frequent_patterns_lokesh.egg-info/SOURCES.txt
+pattern_mining_frequent_patterns_lokesh.egg-info/dependency_links.txt
+pattern_mining_frequent_patterns_lokesh.egg-info/requires.txt
+pattern_mining_frequent_patterns_lokesh.egg-info/top_level.txt

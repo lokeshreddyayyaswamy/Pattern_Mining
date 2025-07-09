@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="pattern_mining_frequent_patterns",  # unique on PyPI
-    version="1.0.0",
+    name="pattern_mining_frequent_patterns_lokesh",  # unique on PyPI
+    version="1.0.0.0",
     author="Lokesh A",
     author_email="lokeshreddy2680@gmail.com",
     description="Apriori Frequent Pattern Mining Algorithm",
