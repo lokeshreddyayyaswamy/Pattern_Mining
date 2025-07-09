@@ -1,70 +1,113 @@
 from Frequent_Pattern import abstract as _ab
+from typing import Dict, Union,Tuple,List
+from pandas import DataFrame
+
+
 class Apriori(_ab._FrequentPatterns):
 
-    def database_b(self, ifile):
+    """
+    Apriori algorithm to mine frequent itemsets from a transactional database.
 
-        if isinstance(ifile, _ab._pd.DataFrame):
-            self.database = ifile.columns.values.tolist()
+    Inherits:
+        _FrequentPatterns: Abstract class containing structure and shared attributes.
 
-            if len(self.database) == 1 and (self.database[0] == 'Transactions' or self.database[0] == 'TID'):
-                self.database = ifile[self.database[0]].values
-                self.database = [x.split(self.sep) for x in self.database]
-            elif len(self.database) == 2 and (self.database[1] == 'Items'):
-                self.database = ifile[self.database[1]].values
-                self.database = [x.split(self.sep) for x in self.database]
-            elif len(self.database) == 1 and self.sep in self.database[0]:
-                self.database.extend(ifile[self.database[0]].values.tolist())
-                self.database = [x.split(self.sep) for x in self.database]
+    Attributes inherited:
+        _ifile (str): Input file or DataFrame.
+        _minsup (int/float): Minimum support threshold.
+        _sep (str): Separator for transactions.
+        _final_patterns (dict): Stores final frequent patterns.
+        _startTime, _endTime (float): Execution time tracking.
+        _memoryUSS, _memoryRSS (float): Memory usage stats.
+        _database (list): Parsed transactions.
+    """
+
+    _ifile = str()
+    _minsup = float()
+    _sep = str()
+    _final_patterns = {}
+    _ofile = str()
+    _startTime = float()
+    _endTime = float()
+    _memoryUSS = float()
+    _memoryRSS = float()
+    _database = []
+
+    def database_b(self, _ifile: Union[str, DataFrame]) -> None:
+
+        """Loads and parses the input file, URL, or DataFrame into the transaction database."""
+
+        if isinstance(_ifile, _ab._pd.DataFrame):
+            self._database = _ifile.columns.values.tolist()
+
+            if len(self._database) == 1 and (self._database[0] == 'Transactions' or self._database[0] == 'TID'):
+                self._database = _ifile[self._database[0]].values
+                self._database = [x.split(self._sep) for x in self._database]
+            elif len(self._database) == 2 and (self._database[1] == 'Items'):
+                self._database = _ifile[self._database[1]].values
+                self._database = [x.split(self._sep) for x in self._database]
+            elif len(self._database) == 1 and self._sep in self._database[0]:
+                self._database.extend(_ifile[self._database[0]].values.tolist())
+                self._database = [x.split(self._sep) for x in self._database]
             else:
                 raise Exception(
                     "your dataframe data has no columns as 'Transactions', 'TID' or 'Items' or data with specified seperator")
 
-        if isinstance(ifile, str):
+        if isinstance(_ifile, str):
 
-            if _ab._validators.url(ifile):
-                data = _ab._urlopen(ifile)
+            if _ab._validators.url(_ifile):
+                data = _ab._urlopen(_ifile)
                 for line in data:
                     line = line.decode("utf-8")
-                    temp = [transaction.strip() for transaction in line.split(self.sep)]
+                    temp = [transaction.strip() for transaction in line.split(self._sep)]
                     temp = [x for x in temp if x]
-                    self.database.append(temp)
+                    self._database.append(temp)
 
             else:
                 try:
-                    with open(ifile, 'r', encoding='utf-8') as file_r:
+                    with open(_ifile, 'r', encoding='utf-8') as file_r:
 
                         for line in file_r:
-                            temp = [transaction.strip() for transaction in line.split(self.sep)]
+                            temp = [transaction.strip() for transaction in line.split(self._sep)]
                             temp = [x for x in temp if x]
-                            self.database.append(temp)
+                            self._database.append(temp)
                 except IOError:
                     print("Check, your file is not there")
 
-    def min_converter(self):
+    def min_converter(self) -> int:
 
-        if type(self.minsup) is int:
-            return self.minsup
+        """ It returns the minimum support threshold."""
 
-        if type(self.minsup) is float:
-            self.minsup = (self.minsup * (len(self.database)))
+        if type(self._minsup) is int:
+            return self._minsup
 
-        if type(self.minsup) is str:
+        if type(self._minsup) is float:
+            self._minsup = (self._minsup * (len(self._database)))
+
+        if type(self._minsup) is str:
             if '.' in self.minsup:
-                self.minsup = float(self.minsup)
-                self.minsup = self.minsup * (len(self.database))
+                self._minsup = float(self._minsup)
+                self._minsup = self._minsup * (len(self._database))
             else:
-                self.minsup = int(self.minsup)
+                self._minsup = int(self._minsup)
         else:
             raise Exception('Enter the minsup value correctly')
 
-        return self.minsup
+        return self._minsup
 
-    def generate_sets(self):
+    def generate_sets(self) -> Tuple[Dict[Tuple[str], set], List[Tuple[str]]]:
+
+        """Generates initial 1-itemsets and candidates with their transaction indices.
+
+        Returns:
+            Tuple containing:
+                - dict of items with supporting transaction indices
+                - list of candidate 1-itemsets
+        """
 
         items = {}
 
         index = 0
-        for transactions in self.database:
+        for transactions in self._database:
             for item in transactions:
                 if tuple([item]) not in items:
                     items[tuple([item])] = [index]
@@ -72,90 +115,141 @@ class Apriori(_ab._FrequentPatterns):
                     items[tuple([item])].append(index)
             index += 1
 
-        items = {tuple(item): set(ind) for item, ind in items.items() if len(ind) >= self.minsup}
+        items = {tuple(item): set(ind) for item, ind in items.items() if len(ind) >= self._minsup}
         items = dict(sorted(items.items(), key=lambda x: len(x[1]), reverse=True))
 
         cands = []
 
         for item in items:
-            if len(items[item]) >= self.minsup:
+            if len(items[item]) >= self._minsup:
                 cands.append(item)
-                self.final_patterns[item] = len(items[item])
+                self._final_patterns[item] = len(items[item])
         return items, cands
 
-    def mine(self, items, cands):
+    def mine(self, items: Dict[Tuple[str], set], cands: List[Tuple[str]]) -> Dict[Tuple[str], int]:
+
+        """Performs the Apriori mining loop to generate all frequent itemsets.
+
+        Args:
+            items: Dictionary of 1-itemsets and their supporting transactions.
+            cands: List of candidate itemsets.
+
+        Returns:
+            Dictionary of frequent itemsets with their support counts.
+        """
 
         while cands:
-            new_key = []
+            new_cands = []
             for i in range(len(cands)):
                 for j in range(i + 1, len(cands)):
                     if cands[i][:-1] == cands[j][:-1]:
-                        n_c = cands[i] + tuple([cands[j][-1]])
-                        intersection = items[tuple([n_c[0]])]
-                        for k in range(1, len(n_c)):
-                            intersection = intersection.intersection(items[tuple([n_c[k]])])
-                        if len(intersection) >= self.minsup:
-                            new_key.append(n_c)
-                            self.final_patterns[n_c] = len(intersection)
+                        new_cand = cands[i] + tuple([cands[j][-1]])
+                        intersection = items[tuple([new_cand[0]])]
+                        for k in range(1, len(new_cand)):
+                            intersection = intersection.intersection(items[tuple([new_cand[k]])])
+                        if len(intersection) >= self._minsup:
+                            new_cands.append(new_cand)
+                            self._final_patterns[new_cand] = len(intersection)
 
             del cands
-            cands = new_key
-            del new_key
+            cands = new_cands
+            del new_cands
 
-        return self.final_patterns
+        return self._final_patterns
 
-    def main(self):
+    def main(self) -> None:
 
-        self.startTime = _ab._time.time()
-        if self.ifile is None:
+        """Main execution method that performs data loading, mining, and memory tracking."""
+
+        self._startTime = _ab._time.time()
+        if self._ifile is None:
             raise Exception("You have not given the file path enter the file path or file name:")
 
-        if self.minsup is None:
+        if self._minsup is None:
             raise Exception("Enter the Minimum Support")
 
-        self.database_b(self.ifile)
+        self.database_b(self._ifile)
 
-        self.minsup = self.min_converter()
+        self._minsup = self.min_converter()
 
         items, cands = self.generate_sets()
         self.mine(items, cands)
 
         print("Frequent patterns were generated successfully using APRIORI algorithm")
 
-        self.endTime = _ab._time.time()
+        self._endTime = _ab._time.time()
         process = _ab._psutil.Process(_ab._os.getpid())
         _ab._gc.collect()
-        self.memoryUSS = process.memory_full_info().uss
-        self.memoryRSS = process.memory_info().rss
+        self._memoryUSS = process.memory_full_info().uss
+        self._memoryRSS = process.memory_info().rss
 
-    def getUSSMemoryConsumption(self):
+    def getUSSMemoryConsumption(self) -> float:
 
-        return self.memoryUSS
+        """Returns the USS (Unique Set Size) memory consumed in bytes.
 
-    def getRSSMemoryConsumption(self):
+        Returns:
+            float: USS memory usage.
+        """
+        return self._memoryUSS
 
-        return self.memoryRSS
+    def getRSSMemoryConsumption(self) -> float:
 
-    def getRunTime(self):
+        """Returns the RSS (Resident Set Size) memory consumed in bytes.
 
-        return self.endTime - self.startTime
+        Returns:
+            float: RSS memory usage.
+        """
+        return self._memoryRSS
 
-    def getPatternsAsDataFrame(self):
-        return _ab._pd.DataFrame(list([[self.sep.join(x), y] for x, y in self.final_patterns.items()]),
-                            columns=['Patterns', 'Support'])
+    def getRunTime(self) -> float:
 
-    def save(self, oFile,seperator="\t"):
+        """Returns the total runtime of the algorithm.
 
-        with open(oFile, 'w') as f:
-            for x, y in self.final_patterns.items():
+        Returns:
+            float: Runtime in seconds.
+        """
+        return self._endTime-self._startTime
+
+    def getPatternsAsDataFrame(self) -> DataFrame:
+
+        """Converts the frequent patterns into a pandas DataFrame.
+
+        Returns:
+            DataFrame containing items and their support count.
+        """
+
+        return _ab._pd.DataFrame(list([[self._sep.join(x), y] for x, y in self._final_patterns.items()]),
+                            columns=['Items', 'Support'])
+
+    def save(self, _ofile: str, seperator: str = "\t") -> None:
+
+        """Saves the frequent patterns to a file.
+
+        Args:
+            _ofile: Output file path.
+            seperator: Delimiter to join itemsets.
+
+        Returns:
+            None
+        """
+        with open(_ofile, 'w') as file_w:
+            file_w.write(f"Item : Support\n")
+            for x, y in self._final_patterns.items():
                 x = seperator.join(x)
-                f.write(f"{x}:{y}\n")
+                file_w.write(f"{x} : {y}\n")
 
-    def getFrequentPatterns(self):
+    def getFrequentPatterns(self) -> Dict[Tuple[str], int]:
 
-        return self.final_patterns
+        """Returns the mined frequent itemsets with their support counts.
+
+        Returns:
+            Dictionary of itemsets and support.
+        """
+        return self._final_patterns
 
     def printResults(self) -> None:
+
+        """Prints a summary of results including pattern count, memory usage, and runtime."""
 
         print("Total number of Frequent Patterns:", len(self.getFrequentPatterns()))
         print("Total Memory Consumed in USS:", self.getUSSMemoryConsumption())
@@ -164,6 +258,8 @@ class Apriori(_ab._FrequentPatterns):
 
 if __name__ == "__main__":
     ifile="Transactional_T10I4D100K.csv"
-    ap=Apriori(ifile,5000,'\t')
+    ofile="freqpatterns.txt"
+    ap=Apriori(ifile,1000,'\t')
     ap.main()
     ap.printResults()
+    ap.save(ofile)
