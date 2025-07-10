@@ -277,3 +277,34 @@ if __name__ == "__main__":
     print("Total ExecutionTime in ms:", _eclat.getRunTime())
 
 # python -m Frequent_Pattern.ECLAT Transactional_T10I4D100K.csv patterns.txt 1000
+#import Frequent_Pattern.ECLAT as alg
+
+#ifile='/content/Transactional_T10I4D100K.csv'
+
+#ofile='patterns.txt'
+
+#minsup=5000
+
+#ec = alg.ECLAT(ifile, minsup)
+
+#ec.main()
+
+#frequentPattern = ec.getFrequentPatterns()
+
+#print("Total number of Frequent Patterns:", len(frequentPattern))
+
+#ec.save(ofile)
+
+#Df = ec.getPatternsAsDataFrame()
+
+#memUSS = ec.getUSSMemoryConsumption()
+
+#print("Total Memory in USS:", memUSS)
+
+#memRSS = ec.getRSSMemoryConsumption()
+
+#print("Total Memory in RSS", memRSS)
+
+#run = ec.getRunTime()
+
+#print("Total ExecutionTime in seconds:", run)
