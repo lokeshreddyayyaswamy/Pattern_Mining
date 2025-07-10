@@ -265,7 +265,7 @@ if __name__ == "__main__":
             _apriori = Apriori(_ab._sys.argv[1], _ab._sys.argv[3], _ab._sys.argv[4])
         _apriori.main()
         print("Total number of Frequent Patterns:", len(_apriori.getFrequentPatterns()))
-        _ap.save(_apriori._sys.argv[2])
+        _apriori.save(_apriori._sys.argv[2])
         print("Total Memory in USS:", _apriori.getUSSMemoryConsumption())
         print("Total Memory in RSS", _apriori.getRSSMemoryConsumption())
         print("Total ExecutionTime in ms:", _apriori.getRunTime())
