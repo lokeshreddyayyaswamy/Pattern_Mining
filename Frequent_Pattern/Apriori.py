@@ -257,9 +257,54 @@ class Apriori(_ab._FrequentPatterns):
         print("Total ExecutionTime in ms:", self.getRunTime())
 
 if __name__ == "__main__":
-    ifile="Transactional_T10I4D100K.csv"
-    ofile="freqpatterns.txt"
-    ap=Apriori(ifile,1000,'\t')
-    ap.main()
-    ap.printResults()
-    ap.save(ofile)
+    _apriori = str()
+    if len(_ab._sys.argv) == 4 or len(_ab._sys.argv) == 5:
+        if len(_ab._sys.argv) == 4:
+            _apriori = Apriori(_ab._sys.argv[1], _ab._sys.argv[3])
+        if len(_ab._sys.argv) == 5:
+            _apriori = Apriori(_ab._sys.argv[1], _ab._sys.argv[3], _ab._sys.argv[4])
+        _apriori.main()
+        print("Total number of Frequent Patterns:", len(_apriori.getFrequentPatterns()))
+        _ap.save(_apriori._sys.argv[2])
+        print("Total Memory in USS:", _apriori.getUSSMemoryConsumption())
+        print("Total Memory in RSS", _apriori.getRSSMemoryConsumption())
+        print("Total ExecutionTime in ms:", _apriori.getRunTime())
+    else:
+        print("Error! The number of input parameters do not match the total number of parameters provided")
+
+# You can run using command prompt
+# python Apriori.py <input_file> <output_file> <minsup> [separator] these are arguments default seperator is "\t"
+
+#pip install fpmine
+
+#import Frequent_Pattern.Apriori as alg
+
+#ifile='/content/Transactional_T10I4D100K.csv'
+
+#ofile='patterns.txt'
+
+#minsup=1000
+
+#ap = alg.Apriori(ifile, minsup)
+
+#ap.main()
+
+#frequentPattern = ap.getFrequentPatterns()
+
+#print("Total number of Frequent Patterns:", len(frequentPattern))
+
+#ap.save(ofile)
+
+#Df = ap.getPatternsAsDataFrame()
+
+#memUSS = ap.getUSSMemoryConsumption()
+
+#print("Total Memory in USS:", memUSS)
+
+#memRSS = ap.getRSSMemoryConsumption()
+
+#print("Total Memory in RSS", memRSS)
+
+#run = ap.getRunTime()
+
+#print("Total ExecutionTime in seconds:", run)

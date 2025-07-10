@@ -27,7 +27,7 @@ class _FrequentPatterns(_ABC):
         database (list): Internal representation of the input database.
     """
 
-    def __init__(self, ifile, minsup, sep):
+    def __init__(self, ifile, minsup, sep="\t"):
         """
         Initializes the FrequentPatterns base class.
 
