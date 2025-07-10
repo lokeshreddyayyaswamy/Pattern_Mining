@@ -1,3 +1,5 @@
+import sys
+
 from Frequent_Pattern import abstract as _ab
 from typing import Dict, Union,Tuple,List
 from pandas import DataFrame
@@ -23,7 +25,7 @@ class Apriori(_ab._FrequentPatterns):
 
     _ifile = str()
     _minsup = float()
-    _sep = str()
+    _sep = "\t"
     _final_patterns = {}
     _ofile = str()
     _startTime = float()
@@ -37,6 +39,7 @@ class Apriori(_ab._FrequentPatterns):
         """Loads and parses the input file, URL, or DataFrame into the transaction database."""
 
         if isinstance(_ifile, _ab._pd.DataFrame):
+
             self._database = _ifile.columns.values.tolist()
 
             if len(self._database) == 1 and (self._database[0] == 'Transactions' or self._database[0] == 'TID'):
@@ -54,6 +57,7 @@ class Apriori(_ab._FrequentPatterns):
 
         if isinstance(_ifile, str):
 
+
             if _ab._validators.url(_ifile):
                 data = _ab._urlopen(_ifile)
                 for line in data:
@@ -67,11 +71,13 @@ class Apriori(_ab._FrequentPatterns):
                     with open(_ifile, 'r', encoding='utf-8') as file_r:
 
                         for line in file_r:
+
                             temp = [transaction.strip() for transaction in line.split(self._sep)]
                             temp = [x for x in temp if x]
                             self._database.append(temp)
                 except IOError:
                     print("Check, your file is not there")
+
 
     def min_converter(self) -> int:
 
@@ -84,7 +90,7 @@ class Apriori(_ab._FrequentPatterns):
             self._minsup = (self._minsup * (len(self._database)))
 
         if type(self._minsup) is str:
-            if '.' in self.minsup:
+            if '.' in self._minsup:
                 self._minsup = float(self._minsup)
                 self._minsup = self._minsup * (len(self._database))
             else:
@@ -257,23 +263,27 @@ class Apriori(_ab._FrequentPatterns):
         print("Total ExecutionTime in ms:", self.getRunTime())
 
 if __name__ == "__main__":
-    _apriori = str()
-    if len(_ab._sys.argv) == 4 or len(_ab._sys.argv) == 5:
-        if len(_ab._sys.argv) == 4:
-            _apriori = Apriori(_ab._sys.argv[1], _ab._sys.argv[3])
-        if len(_ab._sys.argv) == 5:
-            _apriori = Apriori(_ab._sys.argv[1], _ab._sys.argv[3], _ab._sys.argv[4])
-        _apriori.main()
-        print("Total number of Frequent Patterns:", len(_apriori.getFrequentPatterns()))
-        _apriori.save(_apriori._sys.argv[2])
-        print("Total Memory in USS:", _apriori.getUSSMemoryConsumption())
-        print("Total Memory in RSS", _apriori.getRSSMemoryConsumption())
-        print("Total ExecutionTime in ms:", _apriori.getRunTime())
+    _ifile = _ab._sys.argv[1]
+    _ofile = _ab._sys.argv[2]
+    _minsup = _ab._sys.argv[3]
+    if len(_ab._sys.argv) == 4:
+        _apriori = Apriori(_ifile, _minsup)
+    elif len(_ab._sys.argv) == 5:
+        _sep = _ab._sys.argv[4]
+        _apriori = Apriori(_ifile, _minsup, _sep)
     else:
-        print("Error! The number of input parameters do not match the total number of parameters provided")
+        print("Error! Invalid number of parameters.")
+        _ab._sys.exit(1)
+    _apriori.main()
+    print("Total number of Frequent Patterns:", len(_apriori.getFrequentPatterns()))
+    _apriori.save(_ofile)
+    print("Total Memory in USS:", _apriori.getUSSMemoryConsumption())
+    print("Total Memory in RSS", _apriori.getRSSMemoryConsumption())
+    print("Total ExecutionTime in ms:", _apriori.getRunTime())
 
 # You can run using command prompt
-# python Apriori.py <input_file> <output_file> <minsup> [separator] these are arguments default seperator is "\t"
+# python Apriori.py <input_file> <output_file> <minsup> [separator] these are arguments default seperator is '\t'
+# "python -m Frequent_Pattern.Apriori Transactional_T10I4D100K.csv patterns.txt 1000"
 
 #pip install fpmine
 
