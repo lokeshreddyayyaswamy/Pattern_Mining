@@ -331,3 +331,34 @@ if __name__ == "__main__":
     print("Total Memory in RSS", _fp.getRSSMemoryConsumption())
     print("Total ExecutionTime in ms:", _fp.getRunTime())
 
+#import Frequent_Pattern.FPGrowth as alg
+
+#ifile='/content/Transactional_T10I4D100K.csv'
+
+#ofile='patterns.txt'
+
+#minsup=5000
+
+#fp = alg.FPGrowth(ifile, minsup)
+
+#fp.mine()
+
+#frequentPattern = fp.getFrequentPatterns()
+
+#print("Total number of Frequent Patterns:", len(frequentPattern))
+
+#fp.save(ofile)
+
+#Df = fp.getPatternsAsDataFrame()
+
+#memUSS = fp.getUSSMemoryConsumption()
+
+#print("Total Memory in USS:", memUSS)
+
+#memRSS = fp.getRSSMemoryConsumption()
+
+#print("Total Memory in RSS", memRSS)
+
+#run = fp.getRunTime()
+
+#print("Total ExecutionTime in seconds:", run)
