@@ -1,23 +1,34 @@
 from Frequent_Pattern import abstract as _ab
-from typing import Dict, Union,Tuple,List
+from typing import Dict, Union,Tuple
 from pandas import DataFrame
+from itertools import combinations
 
-class ECLAT(_ab._FrequentPatterns):
-    """
-        ECLAT algorithm to mine frequent itemsets from a transactional database.
+_ab._sys.setrecursionlimit(20000)
+class FPNode:
 
-        Inherits:
-            _FrequentPatterns: Abstract class containing structure and shared attributes.
+  def __init__(self,item,count,parent):
+    self.item=item
+    self.children={}
+    self.count=count
+    self.parent=parent
 
-        Attributes inherited:
-            _ifile (str): Input file or DataFrame.
-            _minsup (int/float): Minimum support threshold.
-            _sep (str): Separator for transactions.
-            _final_patterns (dict): Stores final frequent patterns.
-            _startTime, _endTime (float): Execution time tracking.
-            _memoryUSS, _memoryRSS (float): Memory usage stats.
-            _database (list): Parsed transactions.
-        """
+  def addchild(self,item,count=1):
+    if item not in self.children:
+      self.children[item]=FPNode(item,count,self)
+    else:
+      self.children[item].count+=count
+    return self.children[item]
+
+  def get_prefix_path(self):
+    transactions=[]
+    count=self.count
+    node=self.parent
+    while node.parent is not None:
+      transactions.append(node.item)
+      node=node.parent
+    return transactions[::-1],count
+
+class FPGrowth(_ab._FrequentPatterns):
 
     _ifile = str()
     _minsup = float()
@@ -29,6 +40,7 @@ class ECLAT(_ab._FrequentPatterns):
     _memoryUSS = float()
     _memoryRSS = float()
     _database = []
+    uniqueitemset={}
 
     def database_b(self, _ifile: Union[str, DataFrame]) -> None:
 
@@ -92,74 +104,114 @@ class ECLAT(_ab._FrequentPatterns):
 
         return self._minsup
 
-    def generate_sets(self) -> Tuple[Dict[Tuple[str], set], List[Tuple[str]]]:
+    def itemset(self):
 
-        """Generates initial 1-itemsets and candidates with their transaction indices.
+        for items in self._database:
+            for item in items:
+                if item not in self.uniqueitemset:
+                    self.uniqueitemset[item] = 1
+                else:
+                    self.uniqueitemset[item] += 1
 
-        Returns:
-            Tuple containing:
-                - dict of items with supporting transaction indices
-                - list of candidate 1-itemsets
-        """
+    def all_combinations(self, arr):
 
-        items = {}
+        for i in range(1, len(arr) + 1):
+            for combo in combinations(arr, i):
+                yield combo
 
-        index = 0
-        for transactions in self._database:
-            for item in transactions:
-                if tuple([item]) not in items:
-                    items[tuple([item])] = [index]
-                elif tuple([item]) in items:
-                    items[tuple([item])].append(index)
-            index += 1
+    def FPtree(self):
 
-        items = {tuple(item): set(ind) for item, ind in items.items() if len(ind) >= self._minsup}
-        items = dict(sorted(items.items(), key=lambda x: len(x[1])))
+        headerdict = {}
 
-        cands = []
+        self.uniqueitemset = {i: c for i, c in self.uniqueitemset.items() if c >= self._minsup}
 
-        for item in items:
-            if len(items[item]) >= self._minsup:
-                cands.append(item)
-                self._final_patterns[item] = len(items[item])
-        return items, cands
+        root = FPNode([], 0, None)
+        for items in self._database:
+            currnode = root
+            items = sorted([item for item in items if item in self.uniqueitemset], key=lambda x: self.uniqueitemset[x],
+                           reverse=True)
 
-    def mine(self, items, cands):
+            for item in items:
+                currnode = currnode.addchild(item)
 
-        """Performs the ECLAT mining loop to generate all frequent itemsets.
+                if item not in headerdict:
+                    headerdict[item] = [set([currnode]), 1]
+                else:
+                    headerdict[item][0].add(currnode)
+                    headerdict[item][1] += 1
 
-                Args:
-                    items: Dictionary of 1-itemsets and their supporting transactions.
-                    cands: List of candidate itemsets.
+        return root, headerdict
 
-                Returns:
-                    Dictionary of frequent itemsets with their support counts.
-        """
+    def recursive_pattern(self, root, headerdict):
 
-        for i in range(len(cands)):
+        headerdict = {i: c for i, c in sorted(headerdict.items(), key=lambda v: v[1][1])}
 
-            new_cands = []
+        for item in headerdict:
 
-            for j in range(i + 1, len(cands)):
+            newroot = FPNode(root.item + [item], 0, None)
+            if headerdict[item][1] >= self._minsup:
+                self._final_patterns[tuple(newroot.item)] = headerdict[item][1]
 
-                if cands[i][:-1] == cands[j][:-1]:
+            if len(headerdict[item][0]) == 1:
+                transactions, count = headerdict[item][0].pop().get_prefix_path()
+                if len(transactions) == 0:
+                    continue
 
-                    new_pattern = cands[i] + tuple([cands[j][-1]])
+                combos = self.all_combinations(transactions)
+                for c in combos:
+                    self._final_patterns[tuple(list(c) + newroot.item)] = count
 
-                    freq = items[tuple([new_pattern[0]])]
+            if len(headerdict[item][0]) > 1:
 
-                    for l in range(1, len(new_pattern)):
-                        freq = (freq).intersection(items[tuple([new_pattern[l]])])
+                new_transactions = {}
+                itemcount = {}
 
-                    if len(freq) >= self._minsup:
-                        self._final_patterns[tuple(new_pattern)] = len(freq)
+                for node in headerdict[item][0]:
+                    transactions, count = node.get_prefix_path()
 
-                        new_cands.append(new_pattern)
+                    if len(transactions) == 0:
+                        continue
 
-            if (len(new_cands)) > 1:
-                self.mine(items, new_cands)
+                    if tuple(transactions) not in new_transactions:
+                        new_transactions[tuple(transactions)] = count
+                    else:
+                        new_transactions[tuple(transactions)] += count
 
-    def main(self) -> None:
+                    for t_item in transactions:
+                        if t_item not in itemcount:
+                            itemcount[t_item] = count
+                        else:
+                            itemcount[t_item] += count
+
+                itemcount = {i: c for i, c in itemcount.items() if c >= self._minsup}
+
+                if len(itemcount) == 0:
+                    continue
+
+                prefixheaderdict = {}
+
+                for transactions, count in new_transactions.items():
+
+                    currnode = newroot
+
+                    transactions = sorted([transaction for transaction in transactions if transaction in itemcount],
+                                          key=lambda x: itemcount[x], reverse=True)
+
+                    for item_p in transactions:
+                        currnode = currnode.addchild(item_p, count)
+
+                        if item_p not in prefixheaderdict:
+                            prefixheaderdict[item_p] = [set([currnode]), count]
+                        else:
+                            prefixheaderdict[item_p][0].add(currnode)
+                            prefixheaderdict[item_p][1] += count
+
+                if len(prefixheaderdict) == 0:
+                    continue
+
+                self.recursive_pattern(newroot, prefixheaderdict)
+
+    def mine(self) -> None:
 
             """Main execution method that performs data loading, mining, and memory tracking."""
             self._startTime = _ab._time.time()
@@ -171,12 +223,15 @@ class ECLAT(_ab._FrequentPatterns):
 
             self.database_b(self._ifile)
 
+            self.itemset()
+
             self._minsup = self.min_converter()
 
-            items, cands = self.generate_sets()
-            self.mine(items, cands)
+            root, headerdict = self.FPtree()
 
-            print("Frequent patterns were generated successfully using ECLAT algorithm")
+            self.recursive_pattern(root, headerdict)
+
+            print("Frequent patterns were generated successfully using FP-Growth algorithm")
 
             self._endTime = _ab._time.time()
             process = _ab._psutil.Process(_ab._os.getpid())
@@ -262,18 +317,17 @@ if __name__ == "__main__":
     _ofile = _ab._sys.argv[2]
     _minsup = _ab._sys.argv[3]
     if len(_ab._sys.argv) == 4:
-        _eclat = ECLAT(_ifile, _minsup)
+        _fp = FPGrowth(_ifile, _minsup)
     elif len(_ab._sys.argv) == 5:
         _sep = _ab._sys.argv[4]
-        _eclat = ECLAT(_ifile, _minsup, _sep)
+        _fp = FPGrowth(_ifile, _minsup, _sep)
     else:
         print("Error! Invalid number of parameters.")
         _ab._sys.exit(1)
-    _eclat.main()
-    print("Total number of Frequent Patterns:", len(_eclat.getFrequentPatterns()))
-    _eclat.save(_ofile)
-    print("Total Memory in USS:", _eclat.getUSSMemoryConsumption())
-    print("Total Memory in RSS", _eclat.getRSSMemoryConsumption())
-    print("Total ExecutionTime in ms:", _eclat.getRunTime())
+    _fp.mine()
+    print("Total number of Frequent Patterns:", len(_fp.getFrequentPatterns()))
+    _fp.save(_ofile)
+    print("Total Memory in USS:", _fp.getUSSMemoryConsumption())
+    print("Total Memory in RSS", _fp.getRSSMemoryConsumption())
+    print("Total ExecutionTime in ms:", _fp.getRunTime())
 
-# python -m Frequent_Pattern.ECLAT Transactional_T10I4D100K.csv patterns.txt 1000
