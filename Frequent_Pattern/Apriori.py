@@ -23,16 +23,8 @@ class Apriori(_ab._FrequentPatterns):
         _database (list): Parsed transactions.
     """
 
-    _ifile = str()
-    _minsup = float()
-    _sep = "\t"
-    _final_patterns = {}
-    _ofile = str()
-    _startTime = float()
-    _endTime = float()
-    _memoryUSS = float()
-    _memoryRSS = float()
-    _database = []
+    def __init__(self, _ifile, _minsup, _sep="\t"):
+        super().__init__(_ifile, _minsup, _sep)
 
     def database_b(self, _ifile: Union[str, DataFrame]) -> None:
 

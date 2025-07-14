@@ -30,20 +30,11 @@ class FPNode:
 
 class FPGrowth(_ab._FrequentPatterns):
 
-    _ifile = str()
-    _minsup = float()
-    _sep = str()
-    _final_patterns = {}
-    _ofile = str()
-    _startTime = float()
-    _endTime = float()
-    _memoryUSS = float()
-    _memoryRSS = float()
-    _database = []
-    uniqueitemset={}
+    def __init__(self, _ifile, _minsup, _sep="\t"):
+        super().__init__(_ifile, _minsup, _sep)
+        self.__uniqueitemset = {}
 
     def database_b(self, _ifile: Union[str, DataFrame]) -> None:
-
         """Loads and parses the input file, URL, or DataFrame into the transaction database."""
 
         if isinstance(_ifile, _ab._pd.DataFrame):
@@ -82,6 +73,7 @@ class FPGrowth(_ab._FrequentPatterns):
                             self._database.append(temp)
                 except IOError:
                     print("Check, your file is not there")
+                    quit()
 
     def min_converter(self) -> int:
 
@@ -108,10 +100,10 @@ class FPGrowth(_ab._FrequentPatterns):
 
         for items in self._database:
             for item in items:
-                if item not in self.uniqueitemset:
-                    self.uniqueitemset[item] = 1
+                if item not in self.__uniqueitemset:
+                    self.__uniqueitemset[item] = 1
                 else:
-                    self.uniqueitemset[item] += 1
+                    self.__uniqueitemset[item] += 1
 
     def all_combinations(self, arr):
 
@@ -123,12 +115,12 @@ class FPGrowth(_ab._FrequentPatterns):
 
         headerdict = {}
 
-        self.uniqueitemset = {i: c for i, c in self.uniqueitemset.items() if c >= self._minsup}
+        self.__uniqueitemset = {i: c for i, c in self.__uniqueitemset.items() if c >= self._minsup}
 
         root = FPNode([], 0, None)
         for items in self._database:
             currnode = root
-            items = sorted([item for item in items if item in self.uniqueitemset], key=lambda x: self.uniqueitemset[x],
+            items = sorted([item for item in items if item in self.__uniqueitemset], key=lambda x: self.__uniqueitemset[x],
                            reverse=True)
 
             for item in items:

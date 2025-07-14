@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="fpmine",  # unique on PyPI
-    version="1.0.2",
+    version="1.0.0.5",
     author="Lokesh A",
     author_email="lokeshreddy2680@gmail.com",
     description="Frequent Pattern Mining Algorithms",
@@ -14,8 +14,6 @@ setup(
         "numpy",
         'urllib3',
         "validators",
-        'sphinx',
-        'sphinx-rtd-theme',
         "pandas",
         "validators",
         "psutil"
